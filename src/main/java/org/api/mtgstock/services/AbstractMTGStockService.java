@@ -3,8 +3,6 @@ package org.api.mtgstock.services;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.api.mtgstock.modele.Archetype;
 import org.api.mtgstock.modele.CardDetails;
 import org.api.mtgstock.modele.CardSet;
@@ -17,12 +15,16 @@ import org.api.mtgstock.modele.Print;
 import org.api.mtgstock.tools.MTGStockConstants;
 import org.api.mtgstock.tools.MTGStockConstants.FORMAT;
 import org.api.mtgstock.tools.MTGStockConstants.PRICES;
+
+import lombok.extern.log4j.Log4j2;
+
 import org.api.mtgstock.tools.URLUtilities;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+@Log4j2
 public abstract class AbstractMTGStockService {
 
 	protected static final String NUM = "num";
@@ -98,312 +100,280 @@ public abstract class AbstractMTGStockService {
 	protected static final String DATE_FORMAT = "yyyy-MM-dd";
 	protected URLUtilities client;
 
-
-	protected Logger logger = LogManager.getLogger(this.getClass());
-
-	
 	protected AbstractMTGStockService() {
 		client = new URLUtilities();
 	}
-	
 
-	
-	protected PriceHash parsePriceHashFor(JsonObject obj, MTGStockConstants.RARITY r) 
-	{
+	protected PriceHash parsePriceHashFor(JsonObject obj, MTGStockConstants.RARITY r) {
 		var ph = new PriceHash();
-				  ph.setRarity(r);
-				  obj.get(AVG).getAsJsonObject().keySet().forEach(k->ph.getAvg().add(new EntryValue<>(PRICES.valueOf(k.toUpperCase()), Double.parseDouble(obj.get(AVG).getAsJsonObject().get(k).getAsString()))));
-				  obj.get(SUM).getAsJsonObject().keySet().forEach(k->ph.getSum().add(new EntryValue<>(PRICES.valueOf(k.toUpperCase()), Double.parseDouble(obj.get(SUM).getAsJsonObject().get(k).getAsString()))));
+		ph.setRarity(r);
+		obj.get(AVG).getAsJsonObject().keySet()
+				.forEach(k -> ph.getAvg().add(new EntryValue<>(PRICES.valueOf(k.toUpperCase()),
+						Double.parseDouble(obj.get(AVG).getAsJsonObject().get(k).getAsString()))));
+		obj.get(SUM).getAsJsonObject().keySet()
+				.forEach(k -> ph.getSum().add(new EntryValue<>(PRICES.valueOf(k.toUpperCase()),
+						Double.parseDouble(obj.get(SUM).getAsJsonObject().get(k).getAsString()))));
 		return ph;
 	}
-	
 
 	protected Print parsePrintFor(JsonObject obj) {
 		var p = new Print();
-			  p.setId(obj.get(ID).getAsInt());
-			  p.setName(obj.get(NAME).getAsString());
-			 
-			  try{
-				  p.setRarity(MTGStockConstants.RARITY.valueOf(obj.get(RARITY).getAsString()));
-			  }
-			  catch(Exception e)
-			  {
-				  logger.trace("Rarity "  + obj.get(RARITY) + " for " + p.getName() +" doesn't exist");
-			  }
-			  
-			  
-			  if(obj.get(RESERVED)!=null)
-				  p.setReserved(obj.get(RESERVED).getAsBoolean());
-			 
-			  if(obj.get(SET_ID)!=null)
-				  p.setSetId(obj.get(SET_ID).getAsInt());
-			 
-			  
-			  if(obj.get(FOIL)!=null && !obj.get(FOIL).isJsonNull())
-				  p.setFoil(obj.get(FOIL).getAsBoolean());
-			  
-			  if(obj.get(SET_NAME)!=null)
-				  p.setSetName(obj.get(SET_NAME).getAsString());
-			  
-			  
-			  if(obj.get(ICON_CLASS)!=null && !obj.get(ICON_CLASS).isJsonNull())
-				  p.setIconClass(obj.get(ICON_CLASS).getAsString());
+		p.setId(obj.get(ID).getAsInt());
+		p.setName(obj.get(NAME).getAsString());
 
-			  
-			  if(obj.get(SET_TYPE)!=null)
-				  p.setSetType(obj.get(SET_TYPE).getAsString());
-			  
-			  if(obj.get(INCLUDE_DEFAULT)!=null)
-					 p.setIncludeDefault(obj.get(INCLUDE_DEFAULT).getAsBoolean());
-			
-			  
-			  if(obj.get(LAST_WEEK_PRICE)!=null && !obj.get(LAST_WEEK_PRICE).isJsonNull())
-			  	  	p.setLastWeekPrice(obj.get(LAST_WEEK_PRICE).getAsDouble());
-			  else
-				  	p.setLastWeekPrice(0.0);
-			  
-			  
-			  if(obj.get(PREVIOUS_PRICE)!=null && !obj.get(PREVIOUS_PRICE).isJsonNull())
-				  	p.setLastWeekPreviousPrice(obj.get(PREVIOUS_PRICE).getAsDouble());
-			  else
-				  p.setLastWeekPreviousPrice(0.0);
-			  
-			  
-			  
-			  p.setExtendedArt(obj.get(NAME).getAsString().contains(MTGStockConstants.EXTENDED_ART));
-			  p.setOversized(obj.get(NAME).getAsString().contains(MTGStockConstants.OVERSIZED));
-			  p.setBorderless(obj.get(NAME).getAsString().contains(MTGStockConstants.BORDERLESS));
-			  p.setShowcase(obj.get(NAME).getAsString().contains(MTGStockConstants.SHOWCASE));
-			  p.setFullArt(obj.get(NAME).getAsString().contains(MTGStockConstants.FULL_ART));
-			  p.setEtched(obj.get(NAME).getAsString().contains(MTGStockConstants.ETCHED));
-			  p.setJapanese(obj.get(NAME).getAsString().contains(MTGStockConstants.JAPANESE));
-			  
-			  if(obj.get(LATEST_PRICE)!=null)
-			  {
-				  if(obj.get(LATEST_PRICE).isJsonObject()) 
-				  {
-					  obj.get(LATEST_PRICE).getAsJsonObject().keySet().forEach(key->{
-						  try {
-							  p.getLatestPrices().put(MTGStockConstants.PRICES.valueOf(key.toUpperCase()),obj.get(LATEST_PRICE).getAsJsonObject().get(key).getAsDouble());
-						  }
-						  catch(Exception e)
-						  {
-							  p.getLatestPrices().put(MTGStockConstants.PRICES.valueOf(key.toUpperCase()),0.0);
-						  }
-					  });
-				  }
-				  else
-				  {
-					  if(!obj.get(LATEST_PRICE).isJsonNull())
-					  	p.getLatestPrices().put(PRICES.AVG, obj.get(LATEST_PRICE).getAsDouble());
-				  }
-			  }
-			  
-			  if(obj.get(LEGAL)!=null && obj.get(LEGAL).isJsonObject())
-				  for(String key : obj.get(LEGAL).getAsJsonObject().keySet())
-				  {
-					  try {
-						p.getLegal().add(new Legality(FORMAT.valueOf(key.toUpperCase()), obj.get(LEGAL).getAsJsonObject().get(key).getAsString()));
+		try {
+			p.setRarity(MTGStockConstants.RARITY.valueOf(obj.get(RARITY).getAsString()));
+		} catch (Exception e) {
+			log.trace("Rarity " + obj.get(RARITY) + " for " + p.getName() + " doesn't exist");
+		}
+
+		if (obj.get(RESERVED) != null)
+			p.setReserved(obj.get(RESERVED).getAsBoolean());
+
+		if (obj.get(SET_ID) != null)
+			p.setSetId(obj.get(SET_ID).getAsInt());
+
+		if (obj.get(FOIL) != null && !obj.get(FOIL).isJsonNull())
+			p.setFoil(obj.get(FOIL).getAsBoolean());
+
+		if (obj.get(SET_NAME) != null)
+			p.setSetName(obj.get(SET_NAME).getAsString());
+
+		if (obj.get(ICON_CLASS) != null && !obj.get(ICON_CLASS).isJsonNull())
+			p.setIconClass(obj.get(ICON_CLASS).getAsString());
+
+		if (obj.get(SET_TYPE) != null)
+			p.setSetType(obj.get(SET_TYPE).getAsString());
+
+		if (obj.get(INCLUDE_DEFAULT) != null)
+			p.setIncludeDefault(obj.get(INCLUDE_DEFAULT).getAsBoolean());
+
+		if (obj.get(LAST_WEEK_PRICE) != null && !obj.get(LAST_WEEK_PRICE).isJsonNull())
+			p.setLastWeekPrice(obj.get(LAST_WEEK_PRICE).getAsDouble());
+		else
+			p.setLastWeekPrice(0.0);
+
+		if (obj.get(PREVIOUS_PRICE) != null && !obj.get(PREVIOUS_PRICE).isJsonNull())
+			p.setLastWeekPreviousPrice(obj.get(PREVIOUS_PRICE).getAsDouble());
+		else
+			p.setLastWeekPreviousPrice(0.0);
+
+		p.setExtendedArt(obj.get(NAME).getAsString().contains(MTGStockConstants.EXTENDED_ART));
+		p.setOversized(obj.get(NAME).getAsString().contains(MTGStockConstants.OVERSIZED));
+		p.setBorderless(obj.get(NAME).getAsString().contains(MTGStockConstants.BORDERLESS));
+		p.setShowcase(obj.get(NAME).getAsString().contains(MTGStockConstants.SHOWCASE));
+		p.setFullArt(obj.get(NAME).getAsString().contains(MTGStockConstants.FULL_ART));
+		p.setEtched(obj.get(NAME).getAsString().contains(MTGStockConstants.ETCHED));
+		p.setJapanese(obj.get(NAME).getAsString().contains(MTGStockConstants.JAPANESE));
+
+		if (obj.get(LATEST_PRICE) != null) {
+			if (obj.get(LATEST_PRICE).isJsonObject()) {
+				obj.get(LATEST_PRICE).getAsJsonObject().keySet().forEach(key -> {
+					try {
+						p.getLatestPrices().put(MTGStockConstants.PRICES.valueOf(key.toUpperCase()),
+								obj.get(LATEST_PRICE).getAsJsonObject().get(key).getAsDouble());
 					} catch (Exception e) {
-						logger.error("Not legality found for " + key);
+						p.getLatestPrices().put(MTGStockConstants.PRICES.valueOf(key.toUpperCase()), 0.0);
 					}
-				  }
-			
-			  
-			  try {
-				p.setImage(obj.get(IMAGE).getAsString());
+				});
+			} else {
+				if (!obj.get(LATEST_PRICE).isJsonNull())
+					p.getLatestPrices().put(PRICES.AVG, obj.get(LATEST_PRICE).getAsDouble());
+			}
+		}
+
+		if (obj.get(LEGAL) != null && obj.get(LEGAL).isJsonObject())
+			for (String key : obj.get(LEGAL).getAsJsonObject().keySet()) {
+				try {
+					p.getLegal().add(new Legality(FORMAT.valueOf(key.toUpperCase()),
+							obj.get(LEGAL).getAsJsonObject().get(key).getAsString()));
 				} catch (Exception e) {
-					//do nothing
+					log.error("Not legality found for " + key);
 				}
-			 
-		
+			}
+
+		try {
+			p.setImage(obj.get(IMAGE).getAsString());
+		} catch (Exception e) {
+			// do nothing
+		}
+
 		return p;
 	}
-	
+
 	protected CardSet parseSetFor(JsonObject o) {
 		var set = new CardSet();
-			set.setId(o.get(ID).getAsInt());
-			set.setName(o.get(NAME).getAsString());
-			set.setIconClass(o.get(ICON_CLASS).getAsString());
-			set.setSetType(o.get(SET_TYPE).getAsString());
-			
-			try {
-				set.setAbbrevation(o.get(ABBREVIATION).getAsString());
-			}
-			catch(UnsupportedOperationException e)
-			{
-				if(set.getId()==305)
-					set.setAbbrevation("FBB");
-				
-				if(set.getId()==306)
-					set.setAbbrevation("FWB");
-				
-				if(set.getId()==370)
-					set.setAbbrevation("PLIST");
-				
-				if(set.getId()==117)
-					set.setAbbrevation("PPRO");
-				
-				if(set.getId()==116)
-					set.setAbbrevation("PPRE");
-				
-				if(set.getId()==377)
-					set.setAbbrevation("AMH1");
-				
-				if(set.getId()==351)
-					set.setAbbrevation("PBBD");
-				
-				if(set.getId()==236)
-					set.setAbbrevation("PCMP");
-				
-				if(set.getId()==355)
-					set.setAbbrevation("M21");
-				
-				if(set.getId()==353)
-					set.setAbbrevation("IKO");
-				
-				if(set.getId()==356)
-					set.setAbbrevation("2XM");
-				
-				if(set.getId()==345)
-					set.setAbbrevation("THB");
-				
-				if(set.getId()==304)
-					set.setAbbrevation("DPA");
-				
-				if(set.getId()==333)
-					set.setAbbrevation("CEI");
-				
-				if(set.getId()==342)
-					set.setAbbrevation("CMB1");
-				
-				if(set.getId()==325)
-					set.setAbbrevation("GK2");
-				
-				if(set.getId()==228)
-					set.setAbbrevation("PCEL");
-				
-				if(set.getId()==367)
-					set.setAbbrevation("SUM");
-				
-				if(set.getId()==245)
-					set.setAbbrevation("UGIN");
-				
-				if(set.getId()==369)
-					set.setAbbrevation("AZNR");
-				
-				if(set.getId()==276)
-					set.setAbbrevation("PANA");
-				
-				if(set.getId()==375)
-					set.setAbbrevation("PM21");
-				
-				if(set.getId()==374)
-					set.setAbbrevation("PM20");
-				
-				if(set.getId()==372)
-					set.setAbbrevation("PIKO");
-				
-				if(set.getId()==373)
-					set.setAbbrevation("PTHB");
-				
-				if(set.getId()==371)
-					set.setAbbrevation("PELD");
-				
-				if(set.getId()==379)
-					set.setAbbrevation("PZNR");
-			}
-			
-		
-		
+		set.setId(o.get(ID).getAsInt());
+		set.setName(o.get(NAME).getAsString());
+		set.setIconClass(o.get(ICON_CLASS).getAsString());
+		set.setSetType(o.get(SET_TYPE).getAsString());
+
+		try {
+			set.setAbbrevation(o.get(ABBREVIATION).getAsString());
+		} catch (UnsupportedOperationException e) {
+			if (set.getId() == 305)
+				set.setAbbrevation("FBB");
+
+			if (set.getId() == 306)
+				set.setAbbrevation("FWB");
+
+			if (set.getId() == 370)
+				set.setAbbrevation("PLIST");
+
+			if (set.getId() == 117)
+				set.setAbbrevation("PPRO");
+
+			if (set.getId() == 116)
+				set.setAbbrevation("PPRE");
+
+			if (set.getId() == 377)
+				set.setAbbrevation("AMH1");
+
+			if (set.getId() == 351)
+				set.setAbbrevation("PBBD");
+
+			if (set.getId() == 236)
+				set.setAbbrevation("PCMP");
+
+			if (set.getId() == 355)
+				set.setAbbrevation("M21");
+
+			if (set.getId() == 353)
+				set.setAbbrevation("IKO");
+
+			if (set.getId() == 356)
+				set.setAbbrevation("2XM");
+
+			if (set.getId() == 345)
+				set.setAbbrevation("THB");
+
+			if (set.getId() == 304)
+				set.setAbbrevation("DPA");
+
+			if (set.getId() == 333)
+				set.setAbbrevation("CEI");
+
+			if (set.getId() == 342)
+				set.setAbbrevation("CMB1");
+
+			if (set.getId() == 325)
+				set.setAbbrevation("GK2");
+
+			if (set.getId() == 228)
+				set.setAbbrevation("PCEL");
+
+			if (set.getId() == 367)
+				set.setAbbrevation("SUM");
+
+			if (set.getId() == 245)
+				set.setAbbrevation("UGIN");
+
+			if (set.getId() == 369)
+				set.setAbbrevation("AZNR");
+
+			if (set.getId() == 276)
+				set.setAbbrevation("PANA");
+
+			if (set.getId() == 375)
+				set.setAbbrevation("PM21");
+
+			if (set.getId() == 374)
+				set.setAbbrevation("PM20");
+
+			if (set.getId() == 372)
+				set.setAbbrevation("PIKO");
+
+			if (set.getId() == 373)
+				set.setAbbrevation("PTHB");
+
+			if (set.getId() == 371)
+				set.setAbbrevation("PELD");
+
+			if (set.getId() == 379)
+				set.setAbbrevation("PZNR");
+		}
+
 		return set;
 	}
 
-
 	protected CardDetails parseCardFor(JsonObject o) {
-		
-		var c = new CardDetails();
-			 c.setId(o.get(ID).getAsInt());
-			 c.setLowestPrint(o.get(LOWEST_PRINT).getAsInt());
-			 c.setName(o.get(NAME).getAsString());
-			 
-			 if(!o.get(CMC).isJsonNull())
-				 c.setCmc(o.get(CMC).getAsInt());
-			 
-			 if(!o.get(COST).isJsonNull())
-				 c.setCost(o.get(COST).getAsString());
-			
-			 if(!o.get(LEGAL).isJsonNull())
-				 o.get(LEGAL).getAsJsonObject().entrySet().forEach(e->c.getLegal().add(new Legality(FORMAT.valueOf(e.getKey().toUpperCase()), e.getValue().getAsString())));
-			
-			 
-			 if(!o.get(ORACLE).isJsonNull())
-				 c.setOracle(o.get(ORACLE).getAsString());
 
-			 if(!o.get(PWRTGH).isJsonNull())
-				 c.setPwrtgh(o.get(PWRTGH).getAsString());
-			 
-			 if(!o.get(RESERVED).isJsonNull())
-				 c.setReserved(o.get(RESERVED).getAsBoolean());
-			 
-			 if(!o.get(SUBTYPE).isJsonNull())
-				 c.setSubtype(o.get(SUBTYPE).getAsString());
-			
-			 if(!o.get(SUPERTYPE).isJsonNull())
-				 c.setSupertype(o.get(SUPERTYPE).getAsString());
-			 
+		var c = new CardDetails();
+		c.setId(o.get(ID).getAsInt());
+		c.setLowestPrint(o.get(LOWEST_PRINT).getAsInt());
+		c.setName(o.get(NAME).getAsString());
+
+		if (!o.get(CMC).isJsonNull())
+			c.setCmc(o.get(CMC).getAsInt());
+
+		if (!o.get(COST).isJsonNull())
+			c.setCost(o.get(COST).getAsString());
+
+		if (!o.get(LEGAL).isJsonNull())
+			o.get(LEGAL).getAsJsonObject().entrySet().forEach(e -> c.getLegal()
+					.add(new Legality(FORMAT.valueOf(e.getKey().toUpperCase()), e.getValue().getAsString())));
+
+		if (!o.get(ORACLE).isJsonNull())
+			c.setOracle(o.get(ORACLE).getAsString());
+
+		if (!o.get(PWRTGH).isJsonNull())
+			c.setPwrtgh(o.get(PWRTGH).getAsString());
+
+		if (!o.get(RESERVED).isJsonNull())
+			c.setReserved(o.get(RESERVED).getAsBoolean());
+
+		if (!o.get(SUBTYPE).isJsonNull())
+			c.setSubtype(o.get(SUBTYPE).getAsString());
+
+		if (!o.get(SUPERTYPE).isJsonNull())
+			c.setSupertype(o.get(SUPERTYPE).getAsString());
+
 		return null;
 	}
-
 
 	protected Archetype parseArchetypeFor(JsonObject e) {
 		var at = new Archetype();
 		at.setId(e.get(ID).getAsInt());
 		at.setName(e.get(NAME).getAsString());
-		
-		if(e.get(OLD)!=null)
+
+		if (e.get(OLD) != null)
 			at.setOld(e.get(OLD).getAsBoolean());
-		
+
 		return at;
 	}
-	
-	protected DeckCard parseDeckCardFor(JsonObject o)
-	{
+
+	protected DeckCard parseDeckCardFor(JsonObject o) {
 		var d = new DeckCard();
-				 d.setCardType(o.get(CARD_TYPE).getAsString());
-				 d.setCmc(o.get(CMC).getAsInt());
-				 d.setColor(o.get(COLOR).getAsString());
-				 d.setName(o.get(NAME).getAsString());
-				 d.setSet(parseSetFor(o.get(LOWEST_PRINT).getAsJsonObject().get(SET).getAsJsonObject()));
+		d.setCardType(o.get(CARD_TYPE).getAsString());
+		d.setCmc(o.get(CMC).getAsInt());
+		d.setColor(o.get(COLOR).getAsString());
+		d.setName(o.get(NAME).getAsString());
+		d.setSet(parseSetFor(o.get(LOWEST_PRINT).getAsJsonObject().get(SET).getAsJsonObject()));
 		return d;
 	}
-	
-	protected List<Interest> parseInterestFor(PRICES c,JsonArray interests)
-	{
+
+	protected List<Interest> parseInterestFor(PRICES c, JsonArray interests) {
 
 		List<Interest> ret = new ArrayList<>();
-		
-		for(JsonElement e : interests)
-		{
+
+		for (JsonElement e : interests) {
 			var obj = e.getAsJsonObject();
 			try {
 				var t = new Interest();
-						 t.setCategory(c);
-						 t.setInterestType(obj.get(INTEREST_TYPE).getAsString());
-						 t.setPercentage(obj.get(PERCENTAGE).getAsDouble());
-						 t.setPricePresent(obj.get(PRESENT_PRICE).getAsDouble());
-						 t.setPricePast(obj.get(PAST_PRICE).getAsDouble());
-						 t.setPrint(parsePrintFor(obj.get(PRINT).getAsJsonObject()));
-						 t.setFoil(obj.get(FOIL).getAsBoolean());
-						 
-				 ret.add(t);
-			}
-			catch(Exception ex)
-			{
-				logger.error("Error getting interest for "+ e,ex);
+				t.setCategory(c);
+				t.setInterestType(obj.get(INTEREST_TYPE).getAsString());
+				t.setPercentage(obj.get(PERCENTAGE).getAsDouble());
+				t.setPricePresent(obj.get(PRESENT_PRICE).getAsDouble());
+				t.setPricePast(obj.get(PAST_PRICE).getAsDouble());
+				t.setPrint(parsePrintFor(obj.get(PRINT).getAsJsonObject()));
+				t.setFoil(obj.get(FOIL).getAsBoolean());
+
+				ret.add(t);
+			} catch (Exception ex) {
+				log.error("Error getting interest for " + e, ex);
 			}
 		}
 		return ret;
 	}
-	
+
 }

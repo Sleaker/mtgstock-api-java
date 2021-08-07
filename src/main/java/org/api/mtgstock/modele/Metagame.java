@@ -4,6 +4,11 @@ import java.util.Date;
 
 import org.api.mtgstock.tools.MTGStockConstants.FORMAT;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
 public class Metagame {
 
 	private Archetype archetype;
@@ -17,39 +22,4 @@ public class Metagame {
 	public String toString() {
 		return String.valueOf(getArchetype());
 	}
-	
-	
-	public Archetype getArchetype() {
-		return archetype;
-	}
-	public void setArchetype(Archetype archetype) {
-		this.archetype = archetype;
-	}
-	public Date getDate() {
-		return date;
-	}
-	public void setDate(Date date) {
-		this.date = date;
-	}
-	public FORMAT getFormat() {
-		return format;
-	}
-	public void setFormat(FORMAT format) {
-		this.format = format;
-	}
-	public Integer getPlacings() {
-		return placings;
-	}
-	public void setPlacings(Integer placings) {
-		this.placings = placings;
-	}
-	public Integer getTotal() {
-		return total;
-	}
-	public void setTotal(Integer total) {
-		this.total = total;
-	}
-
-	
-	
 }

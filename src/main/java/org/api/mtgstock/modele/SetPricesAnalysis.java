@@ -7,64 +7,16 @@ import java.util.Map;
 
 import org.api.mtgstock.tools.MTGStockConstants.PRICES;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
 public class SetPricesAnalysis {
 
-	
-	private Map<PRICES,PriceVariations> prices;
+	private Map<PRICES, PriceVariations> prices = new EnumMap<>(PRICES.class);
 	private CardSet cardSet;
-	private List<PriceHash> priceHash;
+	private List<PriceHash> priceHash = new ArrayList<>();
 	private PriceHash booster;
-	
-	
-	public PriceHash getBooster() {
-		return booster;
-	}
 
-
-	public void setBooster(PriceHash booster) {
-		this.booster = booster;
-	}
-
-
-	public List<PriceHash> getPriceHash() {
-		return priceHash;
-	}
-
-
-	public void setPriceHash(List<PriceHash> priceHash) {
-		this.priceHash = priceHash;
-	}
-
-
-	public SetPricesAnalysis() {
-		prices = new EnumMap<>(PRICES.class);
-		priceHash = new ArrayList<>();
-	}
-
-
-	public Map<PRICES, PriceVariations> getPrices() {
-		return prices;
-	}
-
-
-	public void setPrices(Map<PRICES, PriceVariations> prices) {
-		this.prices = prices;
-	}
-
-
-	public CardSet getCardSet() {
-		return cardSet;
-	}
-
-
-	public void setCardSet(CardSet cardSet) {
-		this.cardSet = cardSet;
-	}
-	
-	
-	
-	
-	
-	
-		
 }

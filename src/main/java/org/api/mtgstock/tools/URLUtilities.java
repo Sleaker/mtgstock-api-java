@@ -12,18 +12,18 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.http.util.EntityUtils;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+
+import lombok.extern.log4j.Log4j2;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 
+@Log4j2
 public class URLUtilities {
 	private CloseableHttpClient httpclient;
 	private HttpClientContext httpContext;
 	private BasicCookieStore cookieStore;
-	protected Logger logger = LogManager.getLogger(this.getClass());
 
 	public URLUtilities() {
 		httpclient = HttpClients.custom().setUserAgent(MTGStockConstants.USER_AGENT_VALUE).setRedirectStrategy(new LaxRedirectStrategy()).build();
@@ -46,7 +46,7 @@ public class URLUtilities {
 	
 	public HttpResponse doGet(String url) throws IOException
 	{
-		logger.debug("Parsing url " + url);
+		log.debug("Parsing url " + url);
 		var getReq = new HttpGet(url);
 		return execute(getReq);
 	}

@@ -5,20 +5,13 @@ import java.util.Map;
 
 import org.api.mtgstock.tools.MTGStockConstants.PRICES;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@NoArgsConstructor
+@Getter
 public class SealedPricesAnalysis {
 
-	
-	private Map<PRICES,PriceVariations> prices;
-	
-		
-	public SealedPricesAnalysis() {
-		prices = new EnumMap<>(PRICES.class);
-	}
-
-	
-	public Map<PRICES, PriceVariations> getPrices() {
-		return prices;
-	}
-	
-		
+	private Map<PRICES,PriceVariations> prices = new EnumMap<>(PRICES.class);
+			
 }

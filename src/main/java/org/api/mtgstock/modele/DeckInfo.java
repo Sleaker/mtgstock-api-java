@@ -1,5 +1,10 @@
 package org.api.mtgstock.modele;
 
+import java.util.Objects;
+
+import lombok.Data;
+
+@Data
 public class DeckInfo {
 	
 	
@@ -11,34 +16,7 @@ public class DeckInfo {
 	
 	@Override
 	public String toString() {
-		return (getArchetype()!=null)?getArchetype().getName():"";
+		return Objects.isNull(archetype) ? "" : archetype.getName();
 	}
-	
-	public int getId() {
-		return id;
-	}
-	public void setId(int id) {
-		this.id = id;
-	}
-	public Archetype getArchetype() {
-		return archetype;
-	}
-	public void setArchetype(Archetype archetype) {
-		this.archetype = archetype;
-	}
-	public String getPlayerName() {
-		return playerName;
-	}
-	public void setPlayerName(String playerName) {
-		this.playerName = playerName;
-	}
-	public Integer getPosition() {
-		return position;
-	}
-	public void setPosition(Integer position) {
-		this.position = position;
-	}
-	
-	
 	
 }

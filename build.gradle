@@ -1,0 +1,54 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+
+    id "io.freefair.lombok" version "6.1.0-m3"
+    id 'com.adarshr.test-logger' version '3.0.0'
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.apache.logging.log4j:log4j-api:2.14.1'
+    implementation 'org.apache.logging.log4j:log4j-core:2.14.1'
+    implementation 'com.google.code.gson:gson:2.8.7'
+    implementation 'commons-io:commons-io:2.11.0'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.13'
+    testImplementation 'junit:junit:4.13.2'
+}
+
+group = 'com.github.nicho92'
+version = '0.1.19'
+description = 'mtgstock-api-java'
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from(components.java)
+        }
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
+task install {
+    doLast {
+        println "Installed to maven local"
+    }
+    dependsOn build
+    dependsOn publishToMavenLocal
+}
+
